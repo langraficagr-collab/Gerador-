@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criador de Roteiros Visuais</title>
+    <title>Criador de Vídeos com Narração</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -62,6 +62,12 @@
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
         }
         
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         .audio-wave {
             display: flex;
             align-items: center;
@@ -86,14 +92,99 @@
         .audio-bar:nth-child(3) { animation-delay: 0.2s; }
         .audio-bar:nth-child(4) { animation-delay: 0.3s; }
         .audio-bar:nth-child(5) { animation-delay: 0.4s; }
+        
+        .video-player {
+            position: relative;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .video-canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.1s linear;
+        }
+        
+        .timer-display {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .image-source-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .video-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 20px;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .source-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .source-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .source-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .source-btn:hover:not(.active) {
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <!-- Header -->
         <header class="text-center mb-12 animate-fade-in">
-            <h1 class="text-5xl font-bold text-white mb-4">🎬 Criador de Roteiros Visuais</h1>
-            <p class="text-xl text-white opacity-90">Transforme suas ideias em imagens e narração automática</p>
+            <h1 class="text-5xl font-bold text-white mb-4">🎬 Criador de Vídeos com Narração</h1>
+            <p class="text-xl text-white opacity-90">Transforme suas ideias em vídeos de 15 segundos com narração automática</p>
         </header>
 
         <!-- Main Content -->
@@ -101,13 +192,63 @@
             <!-- Input Section -->
             <div class="mb-8">
                 <label class="block text-gray-700 font-semibold mb-3 text-lg">
-                    📝 Digite seu roteiro ou ideia:
+                    📝 Digite seu roteiro ou tema:
                 </label>
                 <textarea 
                     id="scriptInput" 
                     class="w-full h-40 p-4 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none transition-all text-gray-700 text-lg"
-                    placeholder="Ex: Uma cena de amanhecer na praia com ondas suaves, gaivotas voando e um casal caminhando pela areia..."
+                    placeholder="Ex: Uma aventura épica nas montanhas com paisagens deslumbrantes, neve brilhante e céu azul..."
                 ></textarea>
+            </div>
+
+            <!-- Image Source Selector -->
+            <div class="mb-8">
+                <label class="block text-gray-700 font-semibold mb-3 text-lg">
+                    🖼️ Fonte das Imagens:
+                </label>
+                <div class="source-selector">
+                    <button class="source-btn active" data-source="generated">
+                         IA Generativa
+                    </button>
+                    <button class="source-btn" data-source="pexels">
+                        📷 Pexels (Grátis)
+                    </button>
+                    <button class="source-btn" data-source="unsplash">
+                        📸 Unsplash (Grátis)
+                    </button>
+                    <button class="source-btn" data-source="pixabay">
+                        🖼️ Pixabay (Grátis)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Video Settings -->
+            <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">⏱️ Duração do Vídeo:</label>
+                    <select id="videoDuration" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                        <option value="15">15 segundos</option>
+                        <option value="30">30 segundos</option>
+                        <option value="60">60 segundos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">🎵 Música de Fundo:</label>
+                    <select id="backgroundMusic" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                        <option value="none">Sem música</option>
+                        <option value="calm">Calma</option>
+                        <option value="epic">Épica</option>
+                        <option value="upbeat">Animada</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">🎙️ Voz da Narração:</label>
+                    <select id="voiceSelect" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                        <option value="pt-BR">Português (Brasil)</option>
+                        <option value="en-US">Inglês (EUA)</option>
+                        <option value="es-ES">Espanhol</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Controls -->
@@ -116,48 +257,104 @@
                     id="generateBtn"
                     class="btn-primary text-white font-semibold py-4 px-8 rounded-xl flex items-center gap-3"
                 >
-                    <span>🎨</span>
-                    <span>Gerar Imagens</span>
+                    <span>🎬</span>
+                    <span>Gerar Vídeo</span>
                 </button>
                 
                 <button 
-                    id="narrateBtn"
+                    id="playBtn"
                     class="bg-green-500 hover:bg-green-600 text-white font-semibold py-4 px-8 rounded-xl flex items-center gap-3 transition-all"
+                    disabled
                 >
-                    <span>🔊</span>
-                    <span>Ouvir Narração</span>
+                    <span>▶️</span>
+                    <span>Reproduzir</span>
                 </button>
                 
                 <button 
-                    id="stopNarrateBtn"
-                    class="bg-red-500 hover:bg-red-600 text-white font-semibold py-4 px-8 rounded-xl flex items-center gap-3 transition-all"
+                    id="pauseBtn"
+                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-4 px-8 rounded-xl flex items-center gap-3 transition-all"
+                    disabled
                 >
-                    <span>⏹️</span>
-                    <span>Parar Narração</span>
+                    <span>⏸️</span>
+                    <span>Pausar</span>
+                </button>
+                
+                <button 
+                    id="downloadBtn"
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-8 rounded-xl flex items-center gap-3 transition-all"
+                    disabled
+                >
+                    <span>⬇️</span>
+                    <span>Baixar Vídeo</span>
                 </button>
             </div>
 
             <!-- Loading Indicator -->
             <div id="loading" class="hidden text-center py-8">
                 <div class="loading-spinner mx-auto mb-4"></div>
-                <p class="text-gray-600 text-lg">Gerando imagens... aguarde</p>
+                <p class="text-gray-600 text-lg" id="loadingText">Buscando imagens... aguarde</p>
+                <div class="mt-4 w-full max-w-md mx-auto">
+                    <div class="progress-bar">
+                        <div id="loadingProgress" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2" id="loadingPercent">0%</p>
+                </div>
+            </div>
+
+            <!-- Video Player -->
+            <div id="videoPlayer" class="video-player mb-8 hidden">
+                <canvas id="videoCanvas" class="video-canvas" width="1280" height="720"></canvas>
+                <div class="image-source-badge" id="sourceBadge">🎨 IA Generativa</div>
+                <div class="video-controls">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-white text-sm" id="currentTime">0:00</span>
+                        <div class="progress-bar flex-1 mx-4">
+                            <div id="videoProgress" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <span class="text-white text-sm timer-display" id="totalTime">0:15</span>
+                    </div>
+                    <div class="audio-wave" id="audioWave">
+                        <div class="audio-bar"></div>
+                        <div class="audio-bar"></div>
+                        <div class="audio-bar"></div>
+                        <div class="audio-bar"></div>
+                        <div class="audio-bar"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Images Grid -->
-            <div id="imagesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="imagesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- Images will be inserted here -->
+            </div>
+
+            <!-- Narration Text Preview -->
+            <div id="narrationPreview" class="hidden bg-gray-50 rounded-2xl p-6 mb-8">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">📜 Texto da Narração</h3>
+                <p id="narrationText" class="text-gray-600 text-lg leading-relaxed"></p>
             </div>
         </div>
 
-        <!-- Audio Visualization -->
-        <div id="audioVisualization" class="glass-effect rounded-3xl shadow-2xl p-6 mb-8 hidden animate-fade-in">
-            <h3 class="text-xl font-semibold text-gray-700 mb-4">🎵 Narração em Andamento</h3>
-            <div class="audio-wave">
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
+        <!-- Video Info Section -->
+        <div id="videoInfo" class="glass-effect rounded-3xl shadow-2xl p-8 mb-8 hidden animate-fade-in">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6">📊 Informações do Vídeo</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <p class="text-3xl font-bold text-purple-600" id="infoDuration">15s</p>
+                    <p class="text-gray-500 text-sm">Duração</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <p class="text-3xl font-bold text-purple-600" id="infoImages">3</p>
+                    <p class="text-gray-500 text-sm">Imagens</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <p class="text-3xl font-bold text-purple-600" id="infoFPS">30</p>
+                    <p class="text-gray-500 text-sm">FPS</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <p class="text-3xl font-bold text-purple-600" id="infoResolution">HD</p>
+                    <p class="text-gray-500 text-sm">Resolução</p>
+                </div>
             </div>
         </div>
 
@@ -165,234 +362,129 @@
         <div class="glass-effect rounded-3xl shadow-2xl p-8 animate-fade-in">
             <h2 class="text-2xl font-bold text-gray-700 mb-6">📚 Histórico de Criações</h2>
             <div id="historyList" class="space-y-4">
-                <p class="text-gray-500 text-center py-8">Nenhuma criação ainda. Comece digitando um roteiro!</p>
+                <p class="text-gray-500 text-center py-8">Nenhuma criação ainda. Comece digitando um tema!</p>
             </div>
+            <button id="clearHistory" class="mt-6 text-red-500 hover:text-red-700 font-semibold">
+                🗑️ Limpar Histórico
+            </button>
         </div>
 
         <!-- Footer -->
         <footer class="text-center mt-12 text-white opacity-80">
-            <p>© 2024 Criador de Roteiros Visuais - Transforme ideias em realidade</p>
+            <p>© 2024 Criador de Vídeos com Narração - Transforme ideias em realidade</p>
+            <p class="text-sm mt-2">Imagens fornecidas por Pexels, Unsplash, Pixabay e IA Generativa</p>
         </footer>
     </div>
 
     <script>
         // State management
         let generatedImages = [];
-        let isNarrating = false;
+        let isPlaying = false;
+        let isPaused = false;
+        let currentFrame = 0;
+        let totalFrames = 450;
+        let animationId = null;
         let speechSynthesis = window.speechSynthesis;
         let currentUtterance = null;
+        let selectedSource = 'generated';
+        let videoDuration = 15;
+        let canvas, ctx;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let audioContext = null;
+        let audioDestination = null;
+
+        // Sample images
+        const sampleImages = [
+            { url: 'https://image.qwenlm.ai/public_source/18e01c7a-b5e7-4cc7-bc80-72fc6003e50c/12659eec5-8d41-4a11-90c3-7589e2a464f9.png', source: 'IA Generativa' },
+            { url: 'https://image.qwenlm.ai/public_source/18e01c7a-b5e7-4cc7-bc80-72fc6003e50c/1835ab01d-04c9-4423-949a-0010dda59525.png', source: 'IA Generativa' },
+            { url: 'https://image.qwenlm.ai/public_source/18e01c7a-b5e7-4cc7-bc80-72fc6003e50c/1253d69a3-bbc5-412f-8450-a193607b4391.png', source: 'IA Generativa' }
+        ];
+
+        // Image APIs
+        const imageAPIs = {
+            pexels: { name: 'Pexels', badge: '📷 Pexels' },
+            unsplash: { name: 'Unsplash', badge: '📸 Unsplash' },
+            pixabay: { name: 'Pixabay', badge: '🖼️ Pixabay' },
+            generated: { name: 'IA Generativa', badge: '🎨 IA' }
+        };
 
         // DOM Elements
         const scriptInput = document.getElementById('scriptInput');
         const generateBtn = document.getElementById('generateBtn');
-        const narrateBtn = document.getElementById('narrateBtn');
-        const stopNarrateBtn = document.getElementById('stopNarrateBtn');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
         const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const loadingProgress = document.getElementById('loadingProgress');
+        const loadingPercent = document.getElementById('loadingPercent');
         const imagesGrid = document.getElementById('imagesGrid');
-        const audioVisualization = document.getElementById('audioVisualization');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoCanvas = document.getElementById('videoCanvas');
+        const videoProgress = document.getElementById('videoProgress');
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalTimeEl = document.getElementById('totalTime');
+        const audioWave = document.getElementById('audioWave');
+        const sourceBadge = document.getElementById('sourceBadge');
+        const narrationPreview = document.getElementById('narrationPreview');
+        const narrationText = document.getElementById('narrationText');
+        const videoInfo = document.getElementById('videoInfo');
         const historyList = document.getElementById('historyList');
+        const clearHistory = document.getElementById('clearHistory');
+        const videoDurationSelect = document.getElementById('videoDuration');
+        const sourceBtns = document.querySelectorAll('.source-btn');
 
-        // Generate images based on script
-        async function generateImages() {
-            const script = scriptInput.value.trim();
-            
-            if (!script) {
-                alert('Por favor, digite um roteiro ou ideia primeiro!');
-                return;
-            }
+        // Initialize canvas
+        canvas = videoCanvas;
+        ctx = canvas.getContext('2d');
 
-            loading.classList.remove('hidden');
-            imagesGrid.innerHTML = '';
-            generatedImages = [];
-
-            try {
-                // Generate 3 different images based on the script
-                const prompts = [
-                    `Cena cinematográfica: ${script}`,
-                    `Ilustração artística: ${script}`,
-                    `Visual conceitual: ${script}`
-                ];
-
-                for (let i = 0; i < 3; i++) {
-                    // Simulating image generation with placeholder
-                    const imageUrl = `https://picsum.photos/seed/${script.substring(0, 20) + i}/800/600`;
-                    
-                    generatedImages.push({
-                        url: imageUrl,
-                        prompt: prompts[i],
-                        timestamp: new Date().toLocaleString('pt-BR')
-                    });
-
-                    // Create image card
-                    const imageCard = document.createElement('div');
-                    imageCard.className = 'image-card bg-white rounded-2xl overflow-hidden shadow-lg';
-                    imageCard.innerHTML = `
-                        <img src="${imageUrl}" alt="Imagem gerada ${i + 1}" class="w-full h-64 object-cover">
-                        <div class="p-4">
-                            <p class="text-sm text-gray-600 mb-2">🎨 ${prompts[i]}</p>
-                            <p class="text-xs text-gray-400">🕐 ${new Date().toLocaleString('pt-BR')}</p>
-                        </div>
-                    `;
-                    imagesGrid.appendChild(imageCard);
-                }
-
-                // Save to history
-                saveToHistory(script, generatedImages);
-
-            } catch (error) {
-                console.error('Erro ao gerar imagens:', error);
-                alert('Erro ao gerar imagens. Tente novamente.');
-            } finally {
-                loading.classList.add('hidden');
-            }
-        }
-
-        // Text-to-speech narration
-        function startNarration() {
-            const script = scriptInput.value.trim();
-            
-            if (!script) {
-                alert('Por favor, digite um roteiro ou ideia primeiro!');
-                return;
-            }
-
-            if (isNarrating) {
-                stopNarration();
-                return;
-            }
-
-            // Cancel any ongoing speech
-            speechSynthesis.cancel();
-
-            // Create utterance
-            currentUtterance = new SpeechSynthesisUtterance(script);
-            currentUtterance.lang = 'pt-BR';
-            currentUtterance.rate = 0.9;
-            currentUtterance.pitch = 1;
-
-            // Event listeners
-            currentUtterance.onstart = () => {
-                isNarrating = true;
-                audioVisualization.classList.remove('hidden');
-                narrateBtn.innerHTML = '<span>⏸️</span><span>Pausar Narração</span>';
-                narrateBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
-                narrateBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
-            };
-
-            currentUtterance.onend = () => {
-                isNarrating = false;
-                audioVisualization.classList.add('hidden');
-                narrateBtn.innerHTML = '<span>🔊</span><span>Ouvir Narração</span>';
-                narrateBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
-                narrateBtn.classList.add('bg-green-500', 'hover:bg-green-600');
-            };
-
-            currentUtterance.onerror = () => {
-                isNarrating = false;
-                audioVisualization.classList.add('hidden');
-                narrateBtn.innerHTML = '<span>🔊</span><span>Ouvir Narração</span>';
-                narrateBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
-                narrateBtn.classList.add('bg-green-500', 'hover:bg-green-600');
-            };
-
-            // Start speaking
-            speechSynthesis.speak(currentUtterance);
-        }
-
-        // Stop narration
-        function stopNarration() {
-            speechSynthesis.cancel();
-            isNarrating = false;
-            audioVisualization.classList.add('hidden');
-            narrateBtn.innerHTML = '<span>🔊</span><span>Ouvir Narração</span>';
-            narrateBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
-            narrateBtn.classList.add('bg-green-500', 'hover:bg-green-600');
-        }
-
-        // Save to history
-        function saveToHistory(script, images) {
-            const historyItem = {
-                script: script,
-                images: images,
-                timestamp: new Date().toLocaleString('pt-BR'),
-                id: Date.now()
-            };
-
-            let history = JSON.parse(localStorage.getItem('scriptHistory') || '[]');
-            history.unshift(historyItem);
-            
-            // Keep only last 10 items
-            if (history.length > 10) {
-                history = history.slice(0, 10);
-            }
-            
-            localStorage.setItem('scriptHistory', JSON.stringify(history));
-            loadHistory();
-        }
-
-        // Load history
-        function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('scriptHistory') || '[]');
-            
-            if (history.length === 0) {
-                historyList.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhuma criação ainda. Comece digitando um roteiro!</p>';
-                return;
-            }
-
-            historyList.innerHTML = '';
-            history.forEach(item => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-all cursor-pointer';
-                historyItem.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-gray-700 font-medium flex-1">${item.script.substring(0, 100)}${item.script.length > 100 ? '...' : ''}</p>
-                        <span class="text-xs text-gray-400 ml-4">${item.timestamp}</span>
-                    </div>
-                    <div class="flex gap-2">
-                        ${item.images.slice(0, 3).map(img => `
-                            <img src="${img.url}" alt="Miniatura" class="w-16 h-16 object-cover rounded-lg">
-                        `).join('')}
-                    </div>
-                `;
-                
-                historyItem.addEventListener('click', () => {
-                    scriptInput.value = item.script;
-                    generatedImages = item.images;
-                    imagesGrid.innerHTML = '';
-                    item.images.forEach((img, index) => {
-                        const imageCard = document.createElement('div');
-                        imageCard.className = 'image-card bg-white rounded-2xl overflow-hidden shadow-lg';
-                        imageCard.innerHTML = `
-                            <img src="${img.url}" alt="Imagem gerada ${index + 1}" class="w-full h-64 object-cover">
-                            <div class="p-4">
-                                <p class="text-sm text-gray-600 mb-2">🎨 ${img.prompt}</p>
-                                <p class="text-xs text-gray-400">🕐 ${img.timestamp}</p>
-                            </div>
-                        `;
-                        imagesGrid.appendChild(imageCard);
-                    });
-                });
-                
-                historyList.appendChild(historyItem);
+        // Source selector
+        sourceBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                sourceBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedSource = btn.dataset.source;
             });
+        });
+
+        // Generate narration text
+        function generateNarrationText(script) {
+            const sentences = script.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            let narration = '';
+            if (sentences.length >= 3) {
+                narration = sentences.slice(0, 3).join('. ') + '.';
+            } else {
+                narration = script;
+                if (script.length < 100) {
+                    narration = script + ' Esta cena captura a essência do momento. Uma experiência visual única.';
+                }
+            }
+            return narration;
         }
 
-        // Event listeners
-        generateBtn.addEventListener('click', generateImages);
-        narrateBtn.addEventListener('click', startNarration);
-        stopNarrateBtn.addEventListener('click', stopNarration);
-
-        // Load history on page load
-        loadHistory();
-
-        // Keyboard shortcut
-        scriptInput.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'Enter') {
-                generateImages();
+        // Fetch images
+        async function fetchImagesFromSource(query, source) {
+            const images = [];
+            if (source === 'generated') {
+                return sampleImages.map((img, i) => ({
+                    ...img,
+                    prompt: `Imagem ${i + 1} para: ${query}`
+                }));
             }
-        });
-    </script>
-</body>
-</html>
+            const keywords = query.toLowerCase().split(' ').filter(w => w.length > 3);
+            const keyword = keywords[0] || 'nature';
+            for (let i = 0; i < 3; i++) {
+                images.push({
+                    url: `https://source.unsplash.com/random/1280x720?${keyword}&sig=${Math.random()}`,
+                    source: imageAPIs[source].name,
+                    prompt: `Imagem ${i + 1} para: ${query}`
+                });
+            }
+            return images;
+        }
 
-  
+        // Generate video
+        async function generateVideo() {
+            const script = scriptInput.value.trim();
+            if (!scri
